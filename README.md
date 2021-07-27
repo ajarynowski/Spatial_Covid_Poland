@@ -3,7 +3,7 @@
 Zaprezentowana analiza ma na celu ukazanie nierówności szacowanego stopnia wyszczepialności i jego predyktorów. Różnice były analizowane na poziomie powiatów NUTS-4. Różnice w poziomie wyszczepialności uwypuklają problemy nierówności w dostępie do ochrony zdrowia.  
 
 Uzyskane wyniki sugerują, że to bariery systemowe (organizacyjne) wydają się być wiodącym czynnikiem decydującym o wyszczepialności. Akceptacja szczepień przez mieszkańców, na której skupia się uwaga mediów i organizatorów szczepień jest ważna, ale jedynie drugorzędna (w kontekście wyznaczania różnic przestrzennych). Okazuje się również, że model z wykorzystaniem  zaledwie kilku kluczowych zmiennych społeczno-epidemiologicznych wyjaśnia aż >75% zmienności zmienności w liczbie szczepień między powiatami (zwłaszcza preferencje polityczne -konkretnie wybór partii obecnie rządzącej -  wyjaśnia aż 30%). Wyslekcjonowaliśmy powiaty zagrożone wykluczeniem, czyli przede wszystkim  wiejskie i małomiasteczkowe powiaty wschodniej ściany wschodniej  (Podhala, Beskidu Wschodniego, pogranicza województw świętokrzyskiego i podkarpackiego, pogranicza województw mazowieckiego i podlaskiego, pogranicze województw mazowieckiego i lubelskiego) oraz powiaty potencjalnie zagrożone rozproszone wyspowo i klastrowo po całej Polsce. 
-
+Model opisany w pliku R:
 vacccine_spatial_pl_2021.Rmd
 
 
@@ -15,4 +15,5 @@ W związku z tym, że duże ogniska często występują w przemysłowo-wydobywcz
 Odpowiednie wykorzystanie skąpych zasobów logistycznych (ludzkich i informatycznych) to kluczowa dziedzina w dobie kryzysu epidemicznego. Opracowania statystyczne i epidemiologiczne oraz badania empiryczne na polskim społeczeństwie są podstawowym warunkiem poprawnego zarządzania kryzysowego ze względu na specyfikę polskiego społeczeństwa.
 
 Prezentujemy model optymalnej alokacji pracowników sanitarnych zgodnie z modelem geograficznego rozprzestrzenienia zakażeń COVID-19 w trakcie fali wiosennej.
-
+Model opisany w pliku R:
+spatial_pl.Rmd
