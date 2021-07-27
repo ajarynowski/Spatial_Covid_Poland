@@ -1,0 +1,333 @@
+---
+title: "Vaccine spatial analysis"
+author: "AJ"
+date: "26/07/2021"
+output:
+  html_document:
+    df_print: paged
+---
+
+Loading variables from  https://doi.org/10.1101/2020.10.14.20090985 
+```{r setup, include=FALSE}
+library(tidyverse)
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+library(pheatmap)
+library(plotly)
+library(caret)
+library(car)
+library(leaps)
+library(MASS)
+
+# PKW  https://pe2019.pkw.gov.pl/pe2019/pl/dane_w_arkuszach.
+# GUS https://bdl.stat.gov.pl/BDL/start.
+# GUS Poznan https://poznan.stat.gov.pl.
+# Arkusz Rogalskiego https://docs.google.com/spreadsheets/d/1Tv6jKMUYdK6ws6SxxAsHVxZbglZfisC8x_HZ1jacmBM
+# 
+#load("../input/spatial-covid-poland/Przestrzenne.RData")
+#zmiana administacyjna  walbrzyski ->
+#save(all_election2,macierz, file = "spatial2.RData")
+#load("C:/Users/gulak/Downloads/Nowy folder/asf/korona/spatial.RData")
+load("spatial2.RData")
+#load("spatial.RData")
+
+komponenty=c(2,2,3,3,3,1,1,3,1,1,1,3,1,1,2,2,2,1,2,1,2,1,1,2,1,1,2,2,2)
+all_election_2=all_election2[,c(6,8,9,16,19,22,25,26,29,30,33,36:38,41:54,58)]
+all_election_2$cos.1=as.numeric(paste(all_election_2$cos.1))
+colnames(all_election_2)=c("population_size","forest_density","longitude", "PIS_support","income","postproduction_age","internal_emigration","external_emigration", "internal_immigration", "external_immigration","industry_revenue", "empl_agriculture","empl_industry", "empl_services","poulation_density", "arrival_SARS", "size_COVID", "mob_in", "mob_out", "mobility", "log_mobility","pagerank_mob", "betweenness_mob", "closeness_mob", "senior_fraction","industry_fraction", "neighbors_size","neighbors_arr","PM")
+
+
+
+#all_election_2=all_election_2[,-30]
+
+all_election_bezbledow=all_election_2[-bledy2,]
+
+
+
+#write.csv2(all_election2, file="bledy.csv")
+
+
+
+```
+
+
+
+Adding new variables
+
+```{r }
+library(plyr)
+
+szcze=read.csv2("teryt_gminy_szczepimy.csv")
+szcze$kod2=floor(szcze$kod/100)
+proc= ddply(szcze,.(kod2), summarise, proc_vac=mean(w3))
+
+vacc= inner_join(all_election2, proc, by = c("ter_map"= "kod2"))
+
+all_election_2=vacc[,c(6,8,9,16,19,22,25,26,29,30,33,36:38,41:54,58,63)]
+all_election_2$cos.1=as.numeric(paste(all_election_2$cos.1))
+colnames(all_election_2)=c("population_size","forest_density","longitude", "PIS_support","income","postproduction_age","internal_emigration","external_emigration", "internal_immigration", "external_immigration","industry_revenue", "empl_agriculture","empl_industry", "empl_services","poulation_density", "arrival_SARS", "size_COVID", "mob_in", "mob_out", "mobility", "log_mobility","pagerank_mob", "betweenness_mob", "closeness_mob", "senior_fraction","industry_fraction", "neighbors_size","neighbors_arr","PM","vacc")
+
+przypadki=read.csv2("MZ_przypadki.csv")
+przypadki_=przypadki[,c(1,210)]
+przypadki_$ter2=przypadki_$ter/1000
+vacc2= left_join(vacc, przypadki_, by = c("ter_map"= "ter2"))
+
+zgony=read.csv2("MZ_zgodny.csv")
+zgony_=zgony[,c(1,209)]
+zgony_$ter2=zgony_$ter/1000
+vacc3= left_join(vacc2, zgony_, by = c("ter_map"= "ter2"))
+relig=read.csv2("MZ_relig.csv")
+relig_=relig[,c(1,4)]
+relig_$ter2=relig_$X158/1000
+vacc4= left_join(vacc3, relig_, by = c("ter_map"= "ter2"))
+
+
+zgony_nadm=read.csv2("LUDN_2458_CTAB_20210617174022.csv")
+zgony_nadm$nadmiarowe=5*zgony_nadm$rok.zgony.na.1000.ludnoÅ.ci.2020..../(zgony_nadm$rok.zgony.na.1000.ludnoÅ.ci.2015....+zgony_nadm$rok.zgony.na.1000.ludnoÅ.ci.2016....+zgony_nadm$rok.zgony.na.1000.ludnoÅ.ci.2017....+zgony_nadm$rok.zgony.na.1000.ludnoÅ.ci.2018....+zgony_nadm$rok.zgony.na.1000.ludnoÅ.ci.2019....)
+zgony_nadm_=zgony_nadm[,c(1,10)]
+zgony_nadm_$ter2=zgony_nadm_$Kod/1000
+
+dostep=read.csv2("OCHR_1819_CTAB_20210617102207.csv")
+dostep_=dostep[,c(1,3)]
+dostep_$ter2=dostep_$Kod/1000
+vacc5= left_join(vacc4, dostep_, by = c("ter_map"= "ter2"))
+vacc6= left_join(vacc5, zgony_nadm_, by = c("ter_map"= "ter2"))
+
+
+dostep_stary=read.csv2("OCHR_1819_CTAB_20210618123249.csv")
+dostep_stary_=dostep_stary[,c(1,3)]
+dostep_stary_$ter2=dostep_stary_$Kod/1000
+vacc7= left_join(vacc6, dostep_stary_, by = c("ter_map"= "ter2"))
+
+
+
+
+
+dostep_lek=read.csv2("OCHR_3173_CTAB_20210618131911.csv")
+dostep_lek_=dostep_lek[,c(1,3)]
+dostep_lek_$ter2=dostep_lek_$Kod/1000
+vacc8= left_join(vacc7, dostep_lek_, by = c("ter_map"= "ter2"))
+
+```
+
+
+Full reggression model
+
+```{r }
+
+#interaction vs no
+
+
+vacc_=all_election_2[,-c(20,25,27,28)]
+vacc_$size_COVID=vacc2[,65]
+vacc_$arrival_SARS=vacc3[,67]
+#spatial
+#arr$neighbors_arr=all_election$neighbors_arr
+
+colnames(vacc_)[16]="Covid_deaths"
+
+vacc_sel=vacc_[,c(1,2,4,5,6,11,12,15,16,17,22,26)]
+vacc_sel$relig=vacc4[,69]
+
+
+vacc_sel$HealthCareAcc=vacc5[,71]
+#vacc_sel$HealthAcc_old=vacc7[,75]
+vacc_sel$HealthAcc_phys=vacc8[,77]
+
+vacc_sel$excess_mortality=vacc6[,73]
+#vacc_sel_=vacc_sel[,-13]
+
+mod_vacc_inter=lm(vacc~.+forest_density*postproduction_age+PIS_support*income, data=vacc_sel)
+
+mod_vacc=lm(vacc~., data=vacc_sel)
+af <- anova(mod_vacc)
+afss <- af$"Sum Sq"
+anova(mod_vacc)
+proc<-cbind(af,PctExp=afss/sum(afss)*100)
+et=colnames(vacc_sel)
+
+#proc=proc[-24,]
+jedynki=rep(1,15)
+jedynki[3]=2
+jedynki[c(9,10)]=3
+plot(proc$PctExp[-16], xaxt = "n",  xlab="", ylab=" %explained variance", main="variability of % vaccinated by  poviats", pch=16, col = c("black", "red", "green")[jedynki])
+     axis(1, at=1:15, labels=FALSE)
+text(seq(1, 15, by=1), par("usr")[3]-0.6, par("usr")[2]+0, 0, cex=0.57, labels = et[-12], srt = 90, pos = 2, xpd = TRUE)
+#spatial
+
+```
+
+
+Correlation matrix
+```{r }
+vacc_sel_wspolbieznie=vacc_sel
+vacc_sel_wspolbieznie$HealthAcc_old=vacc7[,75]
+kor=cor(vacc_sel_wspolbieznie, use="pairwise.complete.obs")
+pheatmap(kor, display_numbers = T)
+```
+
+
+PCA
+
+```{r }
+
+pca <- prcomp(vacc_sel, center = TRUE, scale. = TRUE)
+varimax4 <- varimax(pca$rotation[,1:3])
+varimax4$loadings
+all_pca=summary(pca)
+all_pca
+```
+
+
+
+
+
+Comparing interaction and no interacton setups
+
+```{r }
+
+
+step.model <- stepAIC(mod_vacc, direction = "both", trace = FALSE)
+step.model2 <- stepAIC(mod_vacc_inter, direction = "backward", trace = FALSE)
+mod=tab_model(step.model, step.model2, digits = 4)
+
+
+mod
+
+
+```
+
+
+moran's spatial correlations
+
+```{r }
+library(ape)
+dists.inv <- 1/macierz
+diag(dists.inv ) <- 0
+
+
+Moran.I(vacc$proc_vac, dists.inv)
+
+
+
+```
+
+Prepering maps
+
+```{r }
+library(rgdal)
+require(rgeos) 
+poland_powiaty_eqa <- readOGR(dsn="C://Users/gulak/Downloads/Nowy folder/asf/ComputationalEpidemiologyASF-master/ProjektML_HEX/Maps", "powiaty")
+
+poland_powiaty <- readOGR(dsn="C://Users/gulak/Downloads/Nowy folder/asf/ComputationalEpidemiologyASF-master/ProjektML_HEX/Maps", "powiaty")
+poland_powiaty <- spTransform(poland_powiaty,
+                              CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+
+
+#poland_powiaty <- gSimplify(poland_powiaty,  tol = 35, topologyPreserve = TRUE)
+poland_powiaty_eqa@data$id=c(0:379)
+
+data1 = fortify(poland_powiaty) %>% left_join(.,poland_powiaty_eqa@data %>% mutate(id = as.character(id)), by = "id" )
+#data1$jpt_kod_je2=as.character(paste(data1$jpt_kod_je))
+
+for (i in 1:380){
+  if (all_election2$ter_map[i]<1000)
+  {all_election2$ter_0[i]=paste("0",as.character(all_election2$ter_map[i]), colapse="", sep="")} else
+  {all_election2$ter_0[i]=as.character(all_election2$ter_map[i])}
+}
+all_election2$jpt_kod_je=as.factor(all_election2$ter_0)
+
+
+#all_election2$jpt_kod_je=as.character(paste(all_election2$c4))
+dane= inner_join(all_election2, data1, by = c("jpt_kod_je"= "jpt_kod_je"))
+
+
+#dag=simplify(dane)
+
+
+
+```
+
+
+
+
+Ploting maps and runing spatial algorithms
+
+```{r }
+
+library(rworldmap)
+library(dbscan)
+
+x=matrix(nrow=380,ncol=3)
+x[,1]=all_election2$x
+x[,2]=all_election2$y
+# time scaling
+scale=1.5
+x[,3]=vacc_sel$vacc*scale
+x2=x
+x2[,2]=x2[,2]/2
+  ds <- dbscan(x, eps = 0.9, minPts = 3)
+ds
+all_election2$dbscan=ds$cluster
+
+newmap <- getMap(resolution = "li")
+
+plot(newmap, xlim = c(16, 22), ylim = c(48, 55), asp = 1.2)
+points(x, col=ds$cluster+1, cex=1.1, pch=16) 
+
+dane_1= inner_join(vacc5, all_election2, by = c("ter_map"= "ter_map"))
+
+dane= inner_join(dane_1, data1, by = c("jpt_kod_je"= "jpt_kod_je"))
+
+
+kolorowe=data.frame(col=integer(24),year=integer(24))
+
+kolorki=c("#000000","#D49DC7","#C1A72F","#E8C51D","#F9ED32","#104A7F","#9EDDF9",
+          "#007EB5","#CACCDB","#6E7BA2","#DAF1FC","#00AEEF","#F6B667","#D97D25","#FBE3C7","#F89420",
+          "#97D1A9","#009444","#754C29","#CEAC8F","#3953A4","#FF0000",	"#00FF00",	"#0000FF")
+all_election2$col_cl=NA
+ds$col=NA
+kolorowe$col=kolorki
+kolorowe$day=unique(ds$cluster)
+for (k in 1:380) {
+  ktore= which(kolorowe$day==ds$cluster[k])
+  all_election2$col_cl[k]=kolorowe$col[ktore]
+}
+
+map <- ggplot() +
+  theme_bw()+
+  geom_polygon(data = dane, 
+               aes(long, lat, group = group, fill = proc_vac))+
+               #fill = "grey50", 
+               #alpha = 0,lwd=0.1,
+               #colour = "white") +
+    scale_fill_continuous("%vaccinated", type = "viridis")+
+
+  geom_point(data = all_election2, aes(x = x, y = y, color =col_cl, size =pis))+
+guides(color = FALSE)+
+  # scale_color_manual(values = mycolors) +
+  scale_color_manual(values=kolorki)+
+   # scale_color_distiller("Clusters", palette = "Spectral") +
+
+  ggtitle("Map of detected geographical clusters of vaccination coverage")
+map
+
+# pdf("mapki_szczepienia2.pdf")
+# map
+# dev.off()
+# 
+# png("mapki_szczepienia2.png")
+# map
+# dev.off()
+
+
+```
+
+
+
+```{r }
+
+
+
+```
