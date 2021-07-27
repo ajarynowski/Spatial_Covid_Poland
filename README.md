@@ -4,6 +4,8 @@ Zaprezentowana analiza ma na celu ukazanie nierówności szacowanego stopnia wys
 
 Uzyskane wyniki sugerują, że to bariery systemowe (organizacyjne) wydają się być wiodącym czynnikiem decydującym o wyszczepialności. Akceptacja szczepień przez mieszkańców, na której skupia się uwaga mediów i organizatorów szczepień jest ważna, ale jedynie drugorzędna (w kontekście wyznaczania różnic przestrzennych). Okazuje się również, że model z wykorzystaniem  zaledwie kilku kluczowych zmiennych społeczno-epidemiologicznych wyjaśnia aż >75% zmienności zmienności w liczbie szczepień między powiatami (zwłaszcza preferencje polityczne -konkretnie wybór partii obecnie rządzącej -  wyjaśnia aż 30%). Wyslekcjonowaliśmy powiaty zagrożone wykluczeniem, czyli przede wszystkim  wiejskie i małomiasteczkowe powiaty wschodniej ściany wschodniej  (Podhala, Beskidu Wschodniego, pogranicza województw świętokrzyskiego i podkarpackiego, pogranicza województw mazowieckiego i podlaskiego, pogranicze województw mazowieckiego i lubelskiego) oraz powiaty potencjalnie zagrożone rozproszone wyspowo i klastrowo po całej Polsce. 
 
+vacccine_spatial_pl_2021.Rmd
+
 
 # Spatial_Covid_Poland - Model optymalnej alokacji zasobów do zwalczania ognisk COVID-19 na lato 2020
 
